@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { db } from '../dbService';
-import { Procedure, InsuranceType, PaymentMethod } from '../types';
-import { Icons, COLORS } from '../constants';
+import { db } from '../dbService.ts';
+import { Procedure, InsuranceType, PaymentMethod } from '../types.ts';
+import { Icons } from '../constants.tsx';
 
 interface Props {
   onSave: () => void;
@@ -10,7 +10,7 @@ interface Props {
 }
 
 const RegistrationForm: React.FC<Props> = ({ onSave, editData }) => {
-  const [formData, setFormData] = useState<Omit<Procedure, 'id' | 'status' | 'received_status' | 'glosa_amount'>>({
+  const [formData, setFormData] = useState<Omit<Procedure, 'id' | 'status' | 'received_status' | 'glosa_amount' | 'created_at'>>({
     patient_name: '',
     date: new Date().toISOString().split('T')[0],
     procedure_name: '',

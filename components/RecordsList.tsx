@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { db } from '../dbService';
-import { Procedure, ReceivedStatus } from '../types';
-import { Icons } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { db } from '../dbService.ts';
+import { Procedure, ReceivedStatus } from '../types.ts';
+import { Icons } from '../constants.tsx';
 
 interface Props {
   onEdit: (proc: Procedure) => void;
@@ -15,7 +15,7 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
 
   const load = async () => {
     const data = await db.getProcedures();
-    setProcedures(data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    setProcedures(data);
   };
 
   useEffect(() => {
@@ -24,16 +24,12 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
 
   const toggleReceived = async (proc: Procedure) => {
     const nextStatus: ReceivedStatus = proc.received_status === 'recebido' ? 'nao_recebido' : 'recebido';
-    // Optimistic update
     setProcedures(prev => prev.map(p => p.id === proc.id ? { ...p, received_status: nextStatus } : p));
     await db.updateStatus(proc.id, { received_status: nextStatus });
   };
 
   const updateObservation = async (id: string, text: string) => {
-    // Update local state immediately for UI responsiveness
     setProcedures(prev => prev.map(p => p.id === id ? { ...p, observations: text } : p));
-    
-    // Debounced or direct update? For simplicity here, direct but you could debounce
     try {
       await db.updateStatus(id, { observations: text });
     } catch (e) {
@@ -62,7 +58,6 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
 
   return (
     <div className="bg-white rounded-[2.5rem] shadow-2xl border-t-[12px] border-[#E67E22] p-8 md:p-12 overflow-hidden">
-      {/* Print Header Section */}
       <div className="print-only mb-10 border-b-2 border-gray-100 pb-6">
         <div className="flex justify-between items-end">
           <div>
@@ -73,7 +68,7 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
             Gerado em: {new Date().toLocaleDateString('pt-BR')}
           </div>
         </div>
-        <div className="mt-6 grid grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-2 gap-4">
           <div className="bg-gray-50 p-3 rounded">
             <p className="text-[8px] font-black text-gray-400 uppercase">Total Faturado</p>
             <p className="text-xs font-bold text-[#E67E22]">{formatBRL(totalFaturado)}</p>

@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Icons, COLORS } from './constants';
-import RegistrationForm from './components/RegistrationForm';
-import RecordsList from './components/RecordsList';
-import AuditModule from './components/AuditModule';
-import { Procedure } from './types';
-import { db, supabase } from './dbService';
+import { Icons } from './constants.tsx';
+import RegistrationForm from './components/RegistrationForm.tsx';
+import RecordsList from './components/RecordsList.tsx';
+import AuditModule from './components/AuditModule.tsx';
+import { Procedure } from './types.ts';
+import { supabase } from './dbService.ts';
 
 type Tab = 'cadastro' | 'registros' | 'auditoria';
 
@@ -26,7 +26,6 @@ const App: React.FC = () => {
     };
 
     checkConnection();
-    // Re-check periodically
     const interval = setInterval(checkConnection, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -48,8 +47,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 overflow-x-hidden">
-      {/* Header */}
+    <div className="min-h-screen pb-20 overflow-x-hidden bg-[#F9FAFB]">
       <header className="max-w-7xl mx-auto px-6 pt-10 flex flex-col md:flex-row justify-between items-center gap-8 animate-fadeIn no-print">
         <div className="flex items-center gap-6">
           <div className="flex flex-col">
@@ -58,7 +56,6 @@ const App: React.FC = () => {
             <div className="w-16 h-1 bg-[#E67E22] mt-2 rounded-full"></div>
           </div>
           
-          {/* Status Indicator */}
           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
             <div className={`w-2 h-2 rounded-full ${
               dbStatus === 'online' ? 'bg-emerald-500 animate-pulse' : 
@@ -71,7 +68,6 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Navigation */}
         <nav className="bg-white p-1.5 rounded-full shadow-xl flex items-center gap-1 border border-gray-100">
           <button 
             onClick={() => setActiveTab('cadastro')}
@@ -94,13 +90,11 @@ const App: React.FC = () => {
         </nav>
       </header>
 
-      {/* Main Content Area */}
       <main className="max-w-5xl mx-auto mt-12 px-4 relative">
-        {/* Sync Loader Overlay */}
         {isSyncing && (
           <div className="absolute -top-10 right-4 flex items-center gap-2 text-[#E67E22] font-semibold animate-fadeIn">
-            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             Sincronizando...

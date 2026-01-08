@@ -1,9 +1,9 @@
 
 import React, { useState, useRef } from 'react';
-import { Icons } from '../constants';
-import { analyzeStatement } from '../geminiService';
-import { AuditResult, Procedure } from '../types';
-import { db } from '../dbService';
+import { Icons } from '../constants.tsx';
+import { analyzeStatement } from '../geminiService.ts';
+import { AuditResult, Procedure } from '../types.ts';
+import { db } from '../dbService.ts';
 
 interface Props {
   onAuditFinished: () => void;
@@ -24,7 +24,7 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
       const base64 = await fileToBase64(file);
       const extracted = await analyzeStatement(base64, file.type);
       
-      const processedResults = [];
+      const processedResults: {ai: AuditResult, local?: Procedure}[] = [];
       let totalGlosa = 0;
 
       for (const item of extracted) {
@@ -32,7 +32,6 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
         processedResults.push({ ai: item, local: localMatch });
         totalGlosa += item.glosaAmount;
 
-        // Auto-update if match found
         if (localMatch) {
           await db.updateStatus(localMatch.id, {
             status: item.status === 'pago' ? 'paid' : 'glosa',
@@ -47,6 +46,7 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
       onAuditFinished();
     } catch (error) {
       alert("Erro ao processar arquivo. Verifique sua conexão e chave de API.");
+      console.error(error);
     } finally {
       setIsProcessing(false);
     }
@@ -56,7 +56,10 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
       reader.onerror = error => reject(error);
     });
   };
@@ -67,7 +70,6 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
 
   return (
     <div className="space-y-8 pb-10">
-      {/* Upload Card */}
       <div className="bg-white rounded-[2.5rem] shadow-2xl border-t-[12px] border-[#E67E22] p-12 text-center">
         <div className="max-w-md mx-auto">
           <div className="w-24 h-24 bg-[#FFF2E6] rounded-[2rem] flex items-center justify-center mx-auto mb-6">
@@ -82,8 +84,8 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
           >
             {isProcessing ? (
               <div className="flex flex-col items-center gap-4">
-                <svg className="animate-spin h-10 w-10 text-[#E67E22]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <svg className="animate-spin h-10 w-10 text-[#E67E22]" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <p className="font-black text-[#E67E22] uppercase tracking-widest text-sm">Processando Extrato...</p>
@@ -105,10 +107,8 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
         </div>
       </div>
 
-      {/* Results Dashboard & List */}
       {results.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fadeIn">
-          {/* Dashboard Stats */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-white p-10 rounded-[2rem] shadow-xl">
               <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2">Impacto Financeiro</p>
@@ -123,7 +123,6 @@ const AuditModule: React.FC<Props> = ({ onAuditFinished }) => {
             </div>
           </div>
 
-          {/* Detailed Analysis List */}
           <div className="lg:col-span-2 bg-white rounded-[2rem] shadow-xl p-10 border border-gray-100">
             <h4 className="text-xl font-black text-[#4A2311] mb-8 uppercase tracking-tight">Divergências e Confirmações</h4>
             <div className="space-y-4">
