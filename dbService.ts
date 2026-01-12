@@ -22,7 +22,6 @@ export const db = {
   },
 
   saveProcedure: async (procedure: Omit<Procedure, 'id' | 'created_at'> & { id?: string }): Promise<void> => {
-    // Clean up object for Supabase
     const { id, ...payload } = procedure;
     
     if (id) {
@@ -36,6 +35,17 @@ export const db = {
         .from('procedures')
         .insert([payload]);
       if (error) throw error;
+    }
+  },
+
+  deleteProcedure: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('procedures')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error('Error deleting record:', error);
+      throw error;
     }
   },
 

@@ -25,7 +25,12 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
   const toggleReceived = async (proc: Procedure) => {
     const nextStatus: ReceivedStatus = proc.received_status === 'recebido' ? 'nao_recebido' : 'recebido';
     setProcedures(prev => prev.map(p => p.id === proc.id ? { ...p, received_status: nextStatus } : p));
-    await db.updateStatus(proc.id, { received_status: nextStatus });
+    try {
+      await db.updateStatus(proc.id, { received_status: nextStatus });
+    } catch (e) {
+      console.error("Update failed, reloading list", e);
+      load();
+    }
   };
 
   const updateObservation = async (id: string, text: string) => {
@@ -41,11 +46,17 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
     window.print();
   };
 
+  const formatDateDisplay = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('pt-BR');
+  };
+
   const filtered = procedures.filter(p => {
     if (!startDate && !endDate) return true;
-    const d = new Date(p.date);
-    const s = startDate ? new Date(startDate) : new Date('1900-01-01');
-    const e = endDate ? new Date(endDate) : new Date('2100-01-01');
+    const d = new Date(p.date + 'T12:00:00');
+    const s = startDate ? new Date(startDate + 'T00:00:00') : new Date('1900-01-01');
+    const e = endDate ? new Date(endDate + 'T23:59:59') : new Date('2100-01-01');
     return d >= s && d <= e;
   });
 
@@ -85,7 +96,7 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
           <h2 className="text-4xl font-black text-[#4A2311]">Atendimentos Registrados</h2>
           <button 
             onClick={handlePrint}
-            className="flex items-center gap-2 text-[#E67E22] font-black uppercase tracking-widest text-[10px] bg-[#FFF2E6] w-fit px-5 py-2.5 rounded-full hover:bg-orange-100 transition-all border border-orange-100"
+            className="flex items-center gap-2 text-[#E67E22] font-black uppercase tracking-widest text-[10px] bg-[#FFF2E6] w-fit px-5 py-2.5 rounded-full hover:bg-orange-100 transition-all border border-orange-100 cursor-pointer"
           >
             <Icons.PDF /> GERAR RELATÓRIO PDF
           </button>
@@ -123,7 +134,7 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
               <th className="px-6 pb-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">Valor</th>
               <th className="px-6 pb-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Pagamento</th>
               <th className="px-6 pb-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Observações</th>
-              <th className="no-print px-6 pb-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">Ações</th>
+              <th className="no-print px-6 pb-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">Ação</th>
             </tr>
           </thead>
           <tbody>
@@ -131,7 +142,7 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
               <tr key={proc.id} className="group transition-all">
                 <td className="bg-[#F9FAFB] px-6 py-5 rounded-l-[1.5rem] border-y border-l border-gray-50 print:bg-white">
                   <div className="font-extrabold text-[#4A2311]">{proc.patient_name}</div>
-                  <div className="text-[10px] text-gray-400 font-bold">{new Date(proc.date).toLocaleDateString('pt-BR')}</div>
+                  <div className="text-[10px] text-gray-400 font-bold">{formatDateDisplay(proc.date)}</div>
                 </td>
                 <td className="bg-[#F9FAFB] px-6 py-5 border-y border-gray-50 print:bg-white">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${proc.insurance === 'Unimed' ? 'bg-[#FFF2E6] text-[#E67E22]' : 'bg-gray-100 text-gray-500'}`}>
@@ -148,7 +159,7 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
                   <div className="no-print">
                     <button 
                       onClick={() => toggleReceived(proc)}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
                         proc.received_status === 'recebido' 
                         ? 'bg-emerald-100 text-emerald-700' 
                         : 'bg-rose-100 text-rose-700'
@@ -178,7 +189,8 @@ const RecordsList: React.FC<Props> = ({ onEdit }) => {
                 <td className="no-print bg-[#F9FAFB] px-6 py-5 rounded-r-[1.5rem] border-y border-r border-gray-50 text-right">
                   <button 
                     onClick={() => onEdit(proc)}
-                    className="p-2 text-gray-300 hover:text-[#E67E22]"
+                    className="p-2 text-gray-300 hover:text-[#E67E22] transition-colors cursor-pointer"
+                    title="Editar"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
